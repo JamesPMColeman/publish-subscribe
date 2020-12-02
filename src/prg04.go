@@ -27,16 +27,39 @@ import (
 
 type PubSub struct {
 	mu sync.Mutex
-	writeMu sync.RWMutex
+	readMu sync.RWMutex
 	topics map[string][]chan string
 }
 
 var wg sync.WaitGroup
 
+// TODO: writes the given message on all the channels associated with the given topic
+func (ps PubSub) publish(topic string, fact string) {
+	ps.readMu.RLock()
+	//fmt.Println(fact)
+	fmt.Println("Publish")
+	for _, channel := range ps.topics[topic] {
+		go func(c chan string) {
+			c <- fact
+		}(channel)
+	}
+	ps.readMu.RUnlock()
+}
+
+// TODO: sends messages taken from a given array of message, one at a time and at random intervals, to all topic subscribers
+func publisher(ps PubSub, topic string, facts[]string) {
+
+	fmt.Println("Publisher")
+	for _, fact := range facts{
+		time.Sleep(time.Duration(rand.Intn(10)) * time.Second)
+		ps.publish(topic, fact)
+	}
+}
+
 // TODO: creates and returns a new channel on a given topic, updating the PubSub struct
 func (ps PubSub) subscribe(topic string) chan string {
 	ps.mu.Lock()
-	fmt.Println("Subscribe")
+	fmt.Println("Subscribe: " + topic)
 	factChannel := make(chan string)
 	//fmt.Println(factChannel)
 	ps.topics[topic] = append(ps.topics[topic], factChannel)
@@ -44,39 +67,16 @@ func (ps PubSub) subscribe(topic string) chan string {
 	return factChannel
 }
 
-// TODO: writes the given message on all the channels associated with the given topic
-func (ps PubSub) publish(topic string, fact string) {
-	ps.writeMu.RLock()
-	fmt.Println(fact)
-	fmt.Println("Publish")
-	for {
-		ps.topics[topic]
-		go func(ps.topics[topic] <-fact)()
-	}
-	fmt.Println(len(ps.topics))
-	fmt.Println(len(ps.topics[topic]))
-	ps.writeMu.RUnlock()
-}
-
-// TODO: sends messages taken from a given array of message, one at a time and at random intervals, to all topic subscribers
-func publisher(ps PubSub, topic string, facts[]string) {
-	
-	fmt.Println("Publisher")
-	for i := range facts{
-		time.Sleep(time.Duration(rand.Intn(10)) * time.Second)
-		ps.publish(topic, facts[i])
-	}
-	
-}
-
 // TODO: reads and displays all messages received from a particular topic
 func subscriber(ps PubSub, name string, topic string) {
 	fmt.Println("Subscriber")
 	factsChannel := ps.subscribe(topic)
 	fmt.Println("Right after call to subscribe")
-	fmt.Println(factsChannel)
+	fmt.Printf("\t%T\n", factsChannel)
+	fmt.Println(len(factsChannel))
 	for {
-		fact := <- factsChannel 
+		fmt.Println("Something")
+		fact := <-factsChannel
 		fmt.Println(name + " received: " + fact)
 	}
 	fmt.Println("What keeps subscriber from terminating immediately")
