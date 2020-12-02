@@ -43,7 +43,7 @@ func (ps PubSub) publish(topic string, fact string) {
 			c <- fact
 		}(channel)
 	}
-	ps.readMu.RUnlock()
+	defer ps.readMu.RUnlock()
 }
 
 // TODO: sends messages taken from a given array of message, one at a time and at random intervals, to all topic subscribers
@@ -54,6 +54,7 @@ func publisher(ps PubSub, topic string, facts[]string) {
 		time.Sleep(time.Duration(rand.Intn(10)) * time.Second)
 		ps.publish(topic, fact)
 	}
+	wg.Done()
 }
 
 // TODO: creates and returns a new channel on a given topic, updating the PubSub struct
@@ -63,7 +64,7 @@ func (ps PubSub) subscribe(topic string) chan string {
 	factChannel := make(chan string)
 	//fmt.Println(factChannel)
 	ps.topics[topic] = append(ps.topics[topic], factChannel)
-	ps.mu.Unlock()
+	defer ps.mu.Unlock()
 	return factChannel
 }
 
