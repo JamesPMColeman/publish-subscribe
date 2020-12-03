@@ -128,8 +128,8 @@ func main() {
 		"Sand dunes 'sing' as the shift",
 	}
 
-	// Done: set wait group to 2 (# of publishers)
-	wg.Add(2)
+	// Done: set wait group to the number of publishers
+	wg.Add(3)
 
 	fmt.Println("\n\n>>>>>>>>>>> Welcome <<<<<<<<<<<<\n\n")
 
