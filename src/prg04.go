@@ -113,21 +113,21 @@ func main() {
 
 	// Done: set wait group to 2 (# of publishers)
 	wg.Add(2)
-
+	fmt.Println("Start")
 	// Done: create the publisher goroutines
 	go publisher(ps, "River Facts", riverFacts)
 	go publisher(ps, "City Facts", cityFacts)
 	go publisher(ps, "Desert Facts", desertFacts)
 
 	// Done: create the subscriber goroutines
-	go subscriber(ps, "Anna", "riverFacts")
-	go subscriber(ps, "Anna", "desertFacts")
-	go subscriber(ps, "Ben", "riverFacts")
-	go subscriber(ps, "Ben", "cityFacts")
-	go subscriber(ps, "Ben", "desertFacts")
-	go subscriber(ps, "Cal", "desertFacts")
-	go subscriber(ps, "Danny", "riverFacts")
-	go subscriber(ps, "Danny", "cityFacts")
+	go subscriber(ps, "Anna", "River Facts")
+	go subscriber(ps, "Anna", "Desert Facts")
+	go subscriber(ps, "Ben", "River Facts")
+	go subscriber(ps, "Ben", "City Facts")
+	go subscriber(ps, "Ben", "Desert Facts")
+	go subscriber(ps, "Cal", "Desert Facts")
+	go subscriber(ps, "Danny", "River Facts")
+	go subscriber(ps, "Danny", "City Facts")
 
 	// Done: wait for all publishers to be done
 	wg.Wait()
