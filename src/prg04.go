@@ -26,8 +26,7 @@ import (
 )
 
 type PubSub struct {
-	mu sync.Mutex
-	readMu sync.RWMutex
+	mu sync.RWMutex
 	topics map[string][]chan string
 }
 
@@ -35,9 +34,9 @@ var wg sync.WaitGroup
 
 // TODO: writes the given message on all the channels associated with the given topic
 func (ps PubSub) publish(topic string, fact string) {
-	ps.readMu.RLock()
-	defer ps.readMu.RUnlock()
-	fmt.Println("Publish")
+	ps.mu.RLock()
+	defer ps.mu.RUnlock()
+	//fmt.Println("Publish")
 
 	for _, channel := range ps.topics[topic] {
 		go func(c chan string) {
@@ -47,12 +46,12 @@ func (ps PubSub) publish(topic string, fact string) {
 }
 
 // TODO: sends messages taken from a given array of message, one at a time and at random intervals, to all topic subscribers
-func publisher(ps PubSub, topic string, facts[]string) {
+func publisher(ps PubSub, topic string, facts []string) {
 	time.Sleep(5 * time.Second)
-	fmt.Println("Publisher")
+	//fmt.Println("Publisher")
 	for _, fact := range facts{
 		//fmt.Println("****** " + fact)
-		time.Sleep(time.Duration(rand.Intn(10)) * time.Second)
+		time.Sleep(time.Duration(rand.Intn(7)) * time.Second)
 		ps.publish(topic, fact)
 	}
 	wg.Done()
@@ -60,10 +59,10 @@ func publisher(ps PubSub, topic string, facts[]string) {
 
 // TODO: creates and returns a new channel on a given topic, updating the PubSub struct
 func (ps PubSub) subscribe(topic string) <-chan string {
-	fmt.Println("Subscribe: " + topic)
+	//fmt.Println("Subscribe: " + topic)
 	ps.mu.Lock()
 	defer ps.mu.Unlock()
-	factChannel := make(chan string, 2)
+	factChannel := make(chan string)
 	//fmt.Println(factChannel)
 	ps.topics[topic] = append(ps.topics[topic], factChannel)
 	return factChannel
@@ -71,16 +70,18 @@ func (ps PubSub) subscribe(topic string) <-chan string {
 
 // TODO: reads and displays all messages received from a particular topic
 func subscriber(ps PubSub, name string, topic string) {
-	fmt.Println("Subscriber")
 	factsChannel := ps.subscribe(topic)
-	fmt.Printf("\t%T\n", factsChannel)
-	fmt.Println(len(factsChannel))
+	//fmt.Println("Subscriber")
+	// fmt.Printf("\t%T\n", factsChannel)
+	// fmt.Println(len(factsChannel))
 	for {
 		//fmt.Println(factsChannel)
 		//fmt.Println(len(factsChannel))
 		//fmt.Printf("%T\n", factsChannel)
 		if fact, ready := <-factsChannel; ready {
 			fmt.Println(name + " received: " + fact)
+		} else {
+			break
 		}
 	}
 }
