@@ -26,29 +26,32 @@ import (
 )
 
 type PubSub struct {
-	mu sync.RWMutex
+	mu sync.Mutex
 	topics map[string][]chan string
 }
 
 var wg sync.WaitGroup
 
-// TODO: writes the given message on all the channels associated with the given topic
+// Done: writes the given message on all the channels associated with the given topic
 func (ps PubSub) publish(topic string, fact string) {
-	ps.mu.RLock()
-	defer ps.mu.RUnlock()
 	//fmt.Println("Publish")
+
+	ps.mu.Lock()
 
 	for _, channel := range ps.topics[topic] {
 		go func(c chan string) {
 			c <- fact
 		}(channel)
 	}
+	ps.mu.Unlock()
 }
 
-// TODO: sends messages taken from a given array of message, one at a time and at random intervals, to all topic subscribers
+// Done: sends messages taken from a given array of message, one at a time and at random intervals, to all topic subscribers
 func publisher(ps PubSub, topic string, facts []string) {
-	time.Sleep(5 * time.Second)
 	//fmt.Println("Publisher")
+
+	time.Sleep(5 * time.Second)
+
 	for _, fact := range facts{
 		//fmt.Println("****** " + fact)
 		time.Sleep(time.Duration(rand.Intn(7)) * time.Second)
@@ -57,27 +60,33 @@ func publisher(ps PubSub, topic string, facts []string) {
 	wg.Done()
 }
 
-// TODO: creates and returns a new channel on a given topic, updating the PubSub struct
+// Done: creates and returns a new channel on a given topic, updating the PubSub struct
 func (ps PubSub) subscribe(topic string) <-chan string {
 	//fmt.Println("Subscribe: " + topic)
+
 	ps.mu.Lock()
-	defer ps.mu.Unlock()
+
 	factChannel := make(chan string)
 	//fmt.Println(factChannel)
 	ps.topics[topic] = append(ps.topics[topic], factChannel)
+
+	ps.mu.Unlock()
 	return factChannel
 }
 
-// TODO: reads and displays all messages received from a particular topic
+// Done: reads and displays all messages received from a particular topic
 func subscriber(ps PubSub, name string, topic string) {
-	factsChannel := ps.subscribe(topic)
 	//fmt.Println("Subscriber")
+
+	factsChannel := ps.subscribe(topic)
 	// fmt.Printf("\t%T\n", factsChannel)
 	// fmt.Println(len(factsChannel))
+
 	for {
 		//fmt.Println(factsChannel)
 		//fmt.Println(len(factsChannel))
 		//fmt.Printf("%T\n", factsChannel)
+
 		if fact, ready := <-factsChannel; ready {
 			fmt.Println(name + " received: " + fact)
 		} else {
@@ -88,7 +97,7 @@ func subscriber(ps PubSub, name string, topic string) {
 
 func main() {
 
-	// TODO: create the ps struct
+	// Done: create the ps struct
 	ps := PubSub{topics: make(map[string][]chan string)}
 
 	// Done: create the arrays of messages to be sent on each topic
@@ -113,7 +122,9 @@ func main() {
 
 	// Done: set wait group to 2 (# of publishers)
 	wg.Add(2)
-	fmt.Println("Start")
+
+	fmt.Println("\n\n>>>>>>>>>>> Welcome <<<<<<<<<<<<\n\n")
+
 	// Done: create the publisher goroutines
 	go publisher(ps, "River Facts", riverFacts)
 	go publisher(ps, "City Facts", cityFacts)
