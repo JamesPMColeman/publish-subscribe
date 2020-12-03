@@ -10,7 +10,7 @@
 
 
 	   /*
-		*		Thanks to youthincmag.com for instrument facts
+		*		
 		*
 		*
 		*
@@ -36,11 +36,16 @@ var wg sync.WaitGroup
 // TODO: writes the given message on all the channels associated with the given topic
 func (ps PubSub) publish(topic string, fact string) {
 	ps.readMu.RLock()
-	//fmt.Println(fact)
+	//fmt.Println("****** " + topic + "\n\t" + fact)
 	fmt.Println("Publish")
+	//fmt.Println(ps.topics[topic])
+	
 	for _, channel := range ps.topics[topic] {
+		fmt.Printf("channel type: %T\n", channel)
 		go func(c chan string) {
-			c <- fact
+			c<-fact
+			fmt.Printf("\t%T\n", c)
+			fmt.Println(c)
 		}(channel)
 	}
 	defer ps.readMu.RUnlock()
@@ -48,9 +53,10 @@ func (ps PubSub) publish(topic string, fact string) {
 
 // TODO: sends messages taken from a given array of message, one at a time and at random intervals, to all topic subscribers
 func publisher(ps PubSub, topic string, facts[]string) {
-
+	time.Sleep(5 * time.Second)
 	fmt.Println("Publisher")
 	for _, fact := range facts{
+		//fmt.Println("****** " + fact)
 		time.Sleep(time.Duration(rand.Intn(10)) * time.Second)
 		ps.publish(topic, fact)
 	}
@@ -58,7 +64,7 @@ func publisher(ps PubSub, topic string, facts[]string) {
 }
 
 // TODO: creates and returns a new channel on a given topic, updating the PubSub struct
-func (ps PubSub) subscribe(topic string) chan string {
+func (ps PubSub) subscribe(topic string) <-chan string {
 	ps.mu.Lock()
 	fmt.Println("Subscribe: " + topic)
 	factChannel := make(chan string)
@@ -72,15 +78,16 @@ func (ps PubSub) subscribe(topic string) chan string {
 func subscriber(ps PubSub, name string, topic string) {
 	fmt.Println("Subscriber")
 	factsChannel := ps.subscribe(topic)
-	fmt.Println("Right after call to subscribe")
 	fmt.Printf("\t%T\n", factsChannel)
 	fmt.Println(len(factsChannel))
 	for {
-		fmt.Println("Something")
-		fact := <-factsChannel
-		fmt.Println(name + " received: " + fact)
+		//fmt.Println(factsChannel)
+		//fmt.Println(len(factsChannel))
+		//fmt.Printf("%T\n", factsChannel)
+		if fact, ready := <-factsChannel; ready {
+			fmt.Println(name + " received: " + fact)
+		}
 	}
-	fmt.Println("What keeps subscriber from terminating immediately")
 }
 
 func main() {
