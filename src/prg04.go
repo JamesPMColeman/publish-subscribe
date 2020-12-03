@@ -36,19 +36,14 @@ var wg sync.WaitGroup
 // TODO: writes the given message on all the channels associated with the given topic
 func (ps PubSub) publish(topic string, fact string) {
 	ps.readMu.RLock()
-	//fmt.Println("****** " + topic + "\n\t" + fact)
+	defer ps.readMu.RUnlock()
 	fmt.Println("Publish")
-	//fmt.Println(ps.topics[topic])
-	
+
 	for _, channel := range ps.topics[topic] {
-		fmt.Printf("channel type: %T\n", channel)
 		go func(c chan string) {
-			c<-fact
-			fmt.Printf("\t%T\n", c)
-			fmt.Println(c)
+			c <- fact
 		}(channel)
 	}
-	defer ps.readMu.RUnlock()
 }
 
 // TODO: sends messages taken from a given array of message, one at a time and at random intervals, to all topic subscribers
@@ -65,12 +60,12 @@ func publisher(ps PubSub, topic string, facts[]string) {
 
 // TODO: creates and returns a new channel on a given topic, updating the PubSub struct
 func (ps PubSub) subscribe(topic string) <-chan string {
-	ps.mu.Lock()
 	fmt.Println("Subscribe: " + topic)
-	factChannel := make(chan string)
+	ps.mu.Lock()
+	defer ps.mu.Unlock()
+	factChannel := make(chan string, 2)
 	//fmt.Println(factChannel)
 	ps.topics[topic] = append(ps.topics[topic], factChannel)
-	defer ps.mu.Unlock()
 	return factChannel
 }
 
