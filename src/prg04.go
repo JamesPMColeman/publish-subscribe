@@ -6,13 +6,19 @@
 *			Project 5													*
 *			November 30th												*
 *																		*
+*																		*
 ************************************************************************/
 
 
 	   /*
-		*		
+		*	Thanks to Eli Bendersky @ eli.thegreenplace.net	
 		*
-		*
+		*	Facts from:
+		*		New York Times - Not all rivers reach the sea
+		*		Business Insider - China's Monster Three Gorges Dam ...
+		*		Kickassfacts.com - 25 kickass interesting facts ...
+		*		Amusingplanet.com - A Stream that swallows people
+		*		Kiwi.com - 15 unusual facts about world cities	
 		*
 		*/
 
@@ -57,6 +63,8 @@ func publisher(ps PubSub, topic string, facts []string) {
 		time.Sleep(time.Duration(rand.Intn(7)) * time.Second)
 		ps.publish(topic, fact)
 	}
+
+	time.Sleep(5 * time.Second)
 	wg.Done()
 }
 
